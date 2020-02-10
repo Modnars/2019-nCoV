@@ -21,7 +21,7 @@ def save():
     # Intercept the json format data.
     content = content[content.index('{'):-1]
     # Save the raw request contents as cache.
-    with open('cache/RequestContents.log', 'w', encoding='utf-8') as writeFile:
+    with open('cache/data.json', 'w', encoding='utf-8') as writeFile:
         writeFile.write(content)
     # Get the data segment.
     data = json.loads(content)['data']
@@ -188,7 +188,7 @@ def request():
     data = json.loads(content)['data']
     # Save the `data` segment from request result.
     # (used by `data.json` which could be parsed by online json parsing tools)
-    with open('cache/data.json', 'w', encoding='utf-8') as writeFile:
+    with open('cache/data.cache', 'w', encoding='utf-8') as writeFile:
         writeFile.write(data)
     # Return the data (dict).
     return json.loads(data)

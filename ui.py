@@ -94,7 +94,7 @@ class MainWindow(object):
         canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
         data = datasource.countries(argv)
         im = draw(data, name)
-        ph = ImageTk.PhotoImage(im.resize((320, 240), Image.ANTIALIAS))
+        ph = ImageTk.PhotoImage(im.resize((480, 360), Image.ANTIALIAS))
         canvas.create_image(320, 240, image=ph, anchor='center')
         root.mainloop()
 
@@ -103,19 +103,28 @@ class MainWindow(object):
         root = tkinter.Toplevel()
         root.title('%s' % self.buttons[1][argv]['text'])
 
+
 def draw(data, name):
-    X = ['确诊', '疑似', '死亡', '治愈']
+    colors = ['#d62728', '#ff7f0e', '#1f77b4', '#2ca02c']
+    # X = ['确诊', '疑似', '死亡', '治愈']
+    X = [2, 4, 6, 8]
     d = data['total']
     Y1 = [d['confirm'], d['suspect'], d['dead'], d['heal']]
     d = data['today']
     Y2 = [Y1[0]-d['confirm'], Y1[1]-d['suspect'], Y1[2]-d['dead'], Y1[3]-d['heal']]
-    plt.bar(X, Y1, facecolor='#9999ff', edgecolor='white')
-    plt.bar(X, Y2, facecolor='#ff9999', edgecolor='white')
+    plt.xticks(X, ['确诊', '疑似', '死亡', '治愈'])
+    X1 = [x-0.2 for x in X]
+    plt.bar(X1, Y1, edgecolor='white', color=colors)
+    #plt.bar(X, Y1, facecolor='#9999ff', edgecolor='white')
+    X2 = [x+0.2 for x in X] 
+    plt.bar(X2, Y2, edgecolor='white', color=colors)
+    #plt.bar(X, Y2, facecolor='#ff9999', edgecolor='white')
 
-    for x, y in zip(range(4), Y1):
-        plt.text(x, y+1, '今日: %d' % y, ha='center', va='bottom')
-    for x, y in zip(range(4), Y2):
-        plt.text(x, y-1, '以往: %d' % y, ha='center', va='top')
+    for x, y in zip(X1, Y1):
+        plt.text(x, y, '目前: %d' % y, ha='center', va='bottom')
+    for x, y in zip(X2, Y2):
+        plt.text(x, y, '以往: %d' % y, ha='center', va='top')
 
     plt.savefig('cache/img/%s.png' % name)
+    plt.close()
     return Image.open('cache/img/%s.png' % name)
