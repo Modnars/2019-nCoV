@@ -90,18 +90,100 @@ class MainWindow(object):
         labelFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
         chartFrame.grid(padx=5, pady=5, row=1, column=0, sticky='nwe')
 
-        canvas = tkinter.Canvas(chartFrame, bg='lightblue', width=640, height=480) 
-        canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
         data = datasource.countries(argv)
+        isUpdatedLabel = ttk.Label(labelFrame)
+        isUpdatedLabel['text'] = '今日已更新' if data['isUpdated'] else '今日未更新'
+        isUpdatedLabel['foreground'] = 'green' if data['isUpdated'] else 'red'
+        isUpdatedLabel.grid(padx=5, pady=5, row=0, column=0, columnspan=4, \
+                sticky='nwes')
+
+        labels = create_labels(labelFrame, data)
+        for i in range(len(labels)):
+            labels[i].grid(padx=18, pady=5, row=1, column=i, sticky='w')
+
+        canvas = tkinter.Canvas(chartFrame, bg='lightblue', width=470, height=350) 
+        canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
         im = draw(data, name)
         ph = ImageTk.PhotoImage(im.resize((480, 360), Image.ANTIALIAS))
-        canvas.create_image(320, 240, image=ph, anchor='center')
+        canvas.create_image(0, 0, image=ph, anchor=tkinter.NW)
+
         root.mainloop()
 
 
     def queryProvince(self, argv):
         root = tkinter.Toplevel()
-        root.title('%s' % self.buttons[1][argv]['text'])
+        name = self.buttons[1][argv]['text']
+        root.title('%s' % name)
+        labelFrame = ttk.Frame(root)
+        chartFrame = ttk.Frame(root)
+        labelFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
+        chartFrame.grid(padx=5, pady=5, row=1, column=0, sticky='nwe')
+
+        data = datasource.provinces(argv)
+        isUpdatedLabel = ttk.Label(labelFrame)
+        isUpdatedLabel['text'] = '今日已更新' if data['isUpdated'] else '今日未更新'
+        isUpdatedLabel['foreground'] = 'green' if data['isUpdated'] else 'red'
+        isUpdatedLabel.grid(padx=5, pady=5, row=0, column=0, columnspan=4, \
+                sticky='nwes')
+
+        labels = create_labels(labelFrame, data)
+        for i in range(len(labels)):
+            labels[i].grid(padx=18, pady=5, row=1, column=i, sticky='w')
+
+        table = create_table(chartFrame, data['children'])
+        table.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
+
+        root.mainloop()
+
+
+def create_labels(root, data):
+    labels = []
+    labels.append(ttk.Label(root))
+    todayNum = data['today']['confirm']
+    labels[0]['text'] = '确诊\n%d\n较昨日%s' % (data['total']['confirm'], \
+            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+    labels[0]['justify'] = 'center'
+    labels[0]['foreground'] = 'red'
+    labels.append(ttk.Label(root))
+    todayNum = data['today']['suspect']
+    labels[1]['text'] = '疑似\n%d\n较昨日%s' % (data['total']['suspect'], \
+            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+    labels[1]['justify'] = 'center'
+    labels[1]['foreground'] = 'orange'
+    labels.append(ttk.Label(root))
+    todayNum = data['today']['dead']
+    labels[2]['text'] = '死亡\n%d\n较昨日%s' % (data['total']['dead'], \
+            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+    labels[2]['justify'] = 'center'
+    labels[2]['foreground'] = 'grey'
+    labels.append(ttk.Label(root))
+    todayNum = data['today']['heal']
+    labels[3]['text'] = '治愈\n%d\n较昨日%s' % (data['total']['heal'], \
+            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+    labels[3]['justify'] = 'center'
+    labels[3]['foreground'] = 'green'
+    return labels
+
+
+def create_table(root, data, center=True):
+    colums_name = ['城市', '确诊', '死亡', '治愈', '状态']
+    colums_width = [100, 80, 80, 80, 80]
+    indices = ['col%d' % i for i in range(len(colums_name))]
+    table = ttk.Treeview(root, show='headings', columns=tuple(indices))
+    for i in range(len(colums_name)):
+        label = 'col' + str(i)
+        val = colums_width[i]
+        if (center):
+            table.column(label, width=val, anchor='center')
+        else: 
+            table.column(label, width=val, anchor='w')
+        table.heading(label, text=colums_name[i])
+    for i in range(len(data)):
+        record = tuple([data[i]['name'], data[i]['total']['confirm'], \
+                data[i]['total']['dead'], data[i]['total']['heal'], \
+                '已更新' if data[i]['today']['isUpdated'] else '未更新'])
+        table.insert('', i, values=record)
+    return table # User should pack the table theirselves
 
 
 def draw(data, name):
