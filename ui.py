@@ -45,14 +45,13 @@ class MainWindow(object):
         self.operationFrame.grid(padx=5, pady=5, row=3, column=0, sticky='nwe')
 
         canvas_width = 730
-        canvas_height = 320
+        canvas_height = 280
         self.canvas = tkinter.Canvas(self.introduceFrame, bg='lightblue', \
                 width=canvas_width, height=canvas_height) 
         self.canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
         im = Image.open('res/head.png')
         self.ph = ImageTk.PhotoImage(im)
-        self.canvas.create_image(canvas_width/2, canvas_height/2, 
-                image=self.ph, anchor='center')
+        self.canvas.create_image(0, 0, image=self.ph, anchor=tkinter.NW)
 
         self.buttons = []
         buttonList = []
@@ -83,7 +82,7 @@ class MainWindow(object):
 
     def queryCountry(self, argv):
         root = tkinter.Toplevel()
-        name = self.buttons[0][argv]['text']
+        name = self.names[0][argv]
         root.title('%s' % name)
         labelFrame = ttk.Frame(root)
         chartFrame = ttk.Frame(root)
@@ -112,7 +111,7 @@ class MainWindow(object):
 
     def queryProvince(self, argv):
         root = tkinter.Toplevel()
-        name = self.buttons[1][argv]['text']
+        name = self.names[1][argv]
         root.title('%s' % name)
         labelFrame = ttk.Frame(root)
         chartFrame = ttk.Frame(root)

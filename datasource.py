@@ -36,6 +36,8 @@ def countries(idx):
     if idx == 0:
         dic['isUpdated'] = True
         dic['today'] = data['chinaAdd']
+        dic['today']['suspect'] = data['chinaDayAddList'][-1]['suspect']
+        #dic['today'] = data['chinaDayAddList'][-1]
         dic['total'] = data['chinaTotal']
     else:
         dic['isUpdated'] = data['areaTree'][idx]['today']['isUpdated']
