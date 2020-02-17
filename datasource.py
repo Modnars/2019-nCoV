@@ -30,6 +30,17 @@ def names():
     return names
     
 
+def world_data():
+    dics = []
+    for country in data['areaTree']:
+        dic = {}
+        dic['name'] = country['name']
+        dic['today'] = country['today']
+        dic['total'] = country['total']
+        dics.append(dic)
+    return (data['lastUpdateTime'], dics)
+
+
 def countries(idx):
     dic = dict()
     dic['name'] = data['areaTree'][idx]['name']
@@ -54,6 +65,7 @@ def provinces(idx):
     dic['total'] = data['areaTree'][0]['children'][idx]['total']
     dic['children'] = data['areaTree'][0]['children'][idx]['children']
     return dic
+
 
 # Initialize the program with `refresh`.
 refresh()

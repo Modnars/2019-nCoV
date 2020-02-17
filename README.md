@@ -12,19 +12,21 @@
 
 - _**程序主界面**_
 
-![](res/example_app.png)
+![程序主界面示例](res/example_app.png)
 
 - _**世界级数据展示**_
 
-- [ ] 内容包括各个国家各类数据(确诊、疑似、死亡和治愈病例数)占比等。
+- [x] 内容包括各个国家各类数据(确诊、疑似、死亡和治愈病例数)占比等。
+
+![世界疫情数据展示界面](res/example_world.png)
 
 - _**国家级数据展示**_
 
 - [x] 内容包括国家各类数据对比(“目前”数据和“以往”数据)展示。
 
-![](res/example_china.png)
+![中国数据展示界面](res/example_china.png)
 
-![](res/example_japan.png)
+![日本数据展示界面](res/example_japan.png)
 
 - [ ] 对于中国来说，针对各种数据展示进行完善。
 
@@ -32,9 +34,9 @@
 
 - [x] 对于每个省份，将省份内各城市数据进行展示。
 
-![](res/example_hubei.png)
+![湖北省数据展示界面](res/example_hubei.png)
 
-![](res/example_hei.png)
+![黑龙江省数据展示界面](res/example_hei.png)
 
 ## 安装与使用
 

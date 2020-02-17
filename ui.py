@@ -14,7 +14,7 @@ from PIL import Image, ImageTk
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.patches as mpatches
 
 import datasource
 
@@ -25,27 +25,36 @@ if not os.path.exists('cache/img/'):
     os.makedirs('cache/img/')
 
 class MainWindow(object):
-
+    '''
+    窗口构造器:
+    @param label: 窗口标题
+    @param names: 名字列表(2维数组: 0维度为国家名称; 1维度为省级名称)
+    '''
     def __init__(self, label, names):
         self.root = tkinter.Tk()
         self.root.title(label)
         self.names = names
         self.add_widgets()
+        self.root.resizable(False, False)
         self.root.mainloop()
 
 
+    '''
+    窗口初始化函数:
+        将窗口Frame以及Frame上的部件初始化并布局。
+    '''
     def add_widgets(self):
-        self.introduceFrame = ttk.Frame(self.root)
-        self.countriesFrame = ttk.Frame(self.root)
-        self.provincesFrame = ttk.Frame(self.root)
-        self.operationFrame = ttk.Frame(self.root)
+        self.introduceFrame = ttk.Frame(self.root) # 程序标题显示面板
+        self.countriesFrame = ttk.Frame(self.root) # 国家选项显示面板
+        self.provincesFrame = ttk.Frame(self.root) # 省级选项显示面板
+        self.operationFrame = ttk.Frame(self.root) # 程序操作显示面板
         self.introduceFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
         self.countriesFrame.grid(padx=5, pady=5, row=1, column=0, sticky='nwe')
         self.provincesFrame.grid(padx=5, pady=5, row=2, column=0, sticky='nwe')
         self.operationFrame.grid(padx=5, pady=5, row=3, column=0, sticky='nwe')
 
-        canvas_width = 730
-        canvas_height = 280
+        canvas_width = 730  # 画布宽度
+        canvas_height = 280 # 画布高度
         self.canvas = tkinter.Canvas(self.introduceFrame, bg='lightblue', \
                 width=canvas_width, height=canvas_height) 
         self.canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
@@ -53,22 +62,35 @@ class MainWindow(object):
         self.ph = ImageTk.PhotoImage(im)
         self.canvas.create_image(0, 0, image=self.ph, anchor=tkinter.NW)
 
-        self.buttons = []
+        worldButton = ttk.Button(self.countriesFrame, text='国家级',
+                command = self.queryWorld)
+        worldButton.grid(padx=3, pady=3, row=0, column=0)
+        self.buttons = []   # 程序按钮集合(2维数组: 0维度为国家级；1维度为省级)
         buttonList = []
         for i in range(len(self.names[0])):
             buttonList.append(ttk.Button(self.countriesFrame, text=self.names[0][i], \
                     command=self.maker(i, 0)))
-            buttonList[i].grid(padx=3, pady=3, row=i//8, column=i%8)
+            buttonList[i].grid(padx=3, pady=3, row=i//8+1, column=i%8)
         self.buttons.append(buttonList.copy())
 
+        chinaButton = ttk.Button(self.provincesFrame, text='省级',
+                command = self.queryChina)
+        chinaButton.grid(padx=3, pady=3, row=0, column=0)
         buttonList.clear()
         for i in range(len(self.names[1])):
             buttonList.append(ttk.Button(self.provincesFrame, text=self.names[1][i], \
                     command=self.maker(i, 1)))
-            buttonList[i].grid(padx=3, pady=3, row=i//8, column=i%8)
+            buttonList[i].grid(padx=3, pady=3, row=i//8+1, column=i%8)
         self.buttons.append(buttonList.copy())
 
 
+    '''
+    选择程序闭包:
+        用于记录每个按钮绑定的运行时执行函数。
+    @param argv: 国家/省标号(从0到len(names[0/1])-1)
+    @param choice: 标记选择的标号是国家级标号还是省级标号
+    @return: 按钮具体绑定的运行时执行函数
+    '''
     def maker(self, argv, choice):
         if choice == 0:
             def func1():
@@ -80,6 +102,11 @@ class MainWindow(object):
             return func2
 
 
+    '''
+    国家级详情信息查询:
+        用于执行国家级详情信息查询功能，即新建一个子窗口对数据进行可视化展示。
+    @param argv: 国家标号(从0到len(names[0])-1)
+    '''
     def queryCountry(self, argv):
         root = tkinter.Toplevel()
         name = self.names[0][argv]
@@ -100,15 +127,23 @@ class MainWindow(object):
         for i in range(len(labels)):
             labels[i].grid(padx=18, pady=5, row=1, column=i, sticky='w')
 
-        canvas = tkinter.Canvas(chartFrame, bg='lightblue', width=470, height=350) 
-        canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
-        im = draw(data, name)
-        ph = ImageTk.PhotoImage(im.resize((480, 360), Image.ANTIALIAS))
-        canvas.create_image(0, 0, image=ph, anchor=tkinter.NW)
+        if argv == 0:
+            canvas = tkinter.Canvas(chartFrame, bg='lightblue', width=470, height=350)
+            canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
+            im = draw(data, name)
+            ph = ImageTk.PhotoImage(im.resize((480, 360), Image.ANTIALIAS))
+            canvas.create_image(0, 0, image=ph, anchor=tkinter.NW)
+        else:
+            pass
 
         root.mainloop()
 
 
+    '''
+    省级详情信息查询:
+        用于执行省级详情信息查询功能，即新建一个子窗口对数据进行可视化展示。
+    @param argv: 省标号(从0到len(names[1])-1)
+    '''
     def queryProvince(self, argv):
         root = tkinter.Toplevel()
         name = self.names[1][argv]
@@ -135,37 +170,99 @@ class MainWindow(object):
         root.mainloop()
 
 
+    def queryWorld(self):
+        root = tkinter.Toplevel()
+        root.title('世界疫情数据')
+        labelFrame = ttk.Frame(root)
+        chartFrame = ttk.Frame(root)
+        labelFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
+        chartFrame.grid(padx=5, pady=5, row=1, column=0, sticky='nwe')
+
+        lastUpdateTime, data = datasource.world_data()
+        ttk.Label(labelFrame, text="数据(中国)最近更新时间:\n%s" % \
+                lastUpdateTime, width=52, foreground='green') \
+                .grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
+        total_number = 0; china_number = data[0]['total']['confirm']
+        for country in data:
+            total_number += country['total']['confirm']
+        text = "世界总确诊数: %d\n中国总确诊数: %d\n其余国家和地区总确诊数: %d" % \
+                (total_number, china_number, total_number-china_number)
+        ttk.Label(labelFrame, text=text, font='Helvetica -18', foreground='red') \
+                .grid(padx=5, pady=5, row=1, column=0, sticky='nwes')
+
+        canvas = tkinter.Canvas(chartFrame, bg='lightblue', width=900, height=350)
+        canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
+        images = draw1(data)
+        im0 = images[0]
+        ph0 = ImageTk.PhotoImage(im0.resize((480, 360), Image.ANTIALIAS))
+        canvas.create_image(0, 0, image=ph0, anchor=tkinter.NW)
+        im1 = images[1]
+        ph1 = ImageTk.PhotoImage(im1.resize((480, 360), Image.ANTIALIAS))
+        canvas.create_image(440, 0, image=ph1, anchor=tkinter.NW)
+
+        create_table(labelFrame, data).grid(padx=5, pady=10, row=0, column=1, \
+                rowspan=2, sticky='e')
+
+        root.mainloop()
+
+
+    def queryChina(self):
+        pass
+
+
+'''
+创造数据显示标签集合:
+    用于展示国家级/省级数据，将四个标签作为一个列表返回。
+'''
 def create_labels(root, data):
     labels = []
-    labels.append(ttk.Label(root))
-    todayNum = data['today']['confirm']
-    labels[0]['text'] = '确诊\n%d\n较昨日%s' % (data['total']['confirm'], \
-            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
-    labels[0]['justify'] = 'center'
-    labels[0]['foreground'] = 'red'
-    labels.append(ttk.Label(root))
-    todayNum = data['today']['suspect']
-    labels[1]['text'] = '疑似\n%d\n较昨日%s' % (data['total']['suspect'], \
-            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
-    labels[1]['justify'] = 'center'
-    labels[1]['foreground'] = 'orange'
-    labels.append(ttk.Label(root))
-    todayNum = data['today']['dead']
-    labels[2]['text'] = '死亡\n%d\n较昨日%s' % (data['total']['dead'], \
-            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
-    labels[2]['justify'] = 'center'
-    labels[2]['foreground'] = 'grey'
-    labels.append(ttk.Label(root))
-    todayNum = data['today']['heal']
-    labels[3]['text'] = '治愈\n%d\n较昨日%s' % (data['total']['heal'], \
-            '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
-    labels[3]['justify'] = 'center'
-    labels[3]['foreground'] = 'green'
+    if 'suspect' in data['today']:
+        labels.append(ttk.Label(root))
+        todayNum = data['today']['confirm']
+        labels[0]['text'] = '确诊\n%d\n较昨日%s' % (data['total']['confirm'], \
+                '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+        labels[0]['justify'] = 'center'
+        labels[0]['foreground'] = 'red'
+        labels.append(ttk.Label(root))
+        todayNum = data['today']['suspect']
+        labels[1]['text'] = '疑似\n%d\n较昨日%s' % (data['total']['suspect'], \
+                '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+        labels[1]['justify'] = 'center'
+        labels[1]['foreground'] = 'orange'
+        labels.append(ttk.Label(root))
+        todayNum = data['today']['dead']
+        labels[2]['text'] = '死亡\n%d\n较昨日%s' % (data['total']['dead'], \
+                '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+        labels[2]['justify'] = 'center'
+        labels[2]['foreground'] = 'grey'
+        labels.append(ttk.Label(root))
+        todayNum = data['today']['heal']
+        labels[3]['text'] = '治愈\n%d\n较昨日%s' % (data['total']['heal'], \
+                '+%d' % todayNum if todayNum >= 0 else '%d' % todayNum)
+        labels[3]['justify'] = 'center'
+        labels[3]['foreground'] = 'green'
+    else:
+        labels.append(ttk.Label(root))
+        labels[0]['text'] = '确诊\n%d' % data['total']['confirm']
+        labels[0]['justify'] = 'center'
+        labels[0]['foreground'] = 'red'
+        labels.append(ttk.Label(root))
+        labels[1]['text'] = '疑似\n%d' % data['total']['suspect']
+        labels[1]['justify'] = 'center'
+        labels[1]['foreground'] = 'orange'
+        labels.append(ttk.Label(root))
+        labels[2]['text'] = '死亡\n%d' % data['total']['dead']
+        labels[2]['justify'] = 'center'
+        labels[2]['foreground'] = 'grey'
+        labels.append(ttk.Label(root))
+        labels[3]['text'] = '治愈\n%d' % data['total']['heal']
+        labels[3]['justify'] = 'center'
+        labels[3]['foreground'] = 'green'
     return labels
 
 
 def create_table(root, data, center=True):
-    colums_name = ['城市', '确诊', '死亡', '治愈', '状态']
+    colums_name = ['地区', '确诊', '死亡', '治愈', '状态']
     colums_width = [100, 80, 80, 80, 80]
     indices = ['col%d' % i for i in range(len(colums_name))]
     table = ttk.Treeview(root, show='headings', columns=tuple(indices))
@@ -206,6 +303,53 @@ def draw(data, name):
     for x, y in zip(X2, Y2):
         plt.text(x, y, '以往: %d' % y, ha='center', va='top')
 
-    plt.savefig('cache/img/%s.png' % name)
+    file_name = 'cache/img/%s.png' % name
+    plt.savefig(file_name)
     plt.close()
-    return Image.open('cache/img/%s.png' % name)
+    image = Image.open(file_name)
+    os.remove(file_name)
+    return image
+
+
+'''
+绘制世界疫情数据图表:
+    以饼状图来展示世界各个国家确诊数占比。
+'''
+def draw1(data):
+    images = []
+
+    labels = [data[0]['name'], '其余国家']
+    others_total = 0
+    for i in range(len(data)-1):
+        others_total += data[1+i]['total']['confirm']
+    nums = [data[0]['total']['confirm'], others_total]
+    plt.pie(nums, labels=labels, autopct='%.2f%%', shadow=True)
+    plt.title('世界疫情数据')
+    name = 'cache/img/world_data.png'
+    plt.savefig(name); plt.close()
+    images.append(Image.open(name))
+    # image = Image.open('cache/img/world_data.png')
+    os.remove(name)
+
+    labels = [item['name'] for item in data][1:11]
+    nums = [item['total']['confirm'] for item in data][1:11]
+    X = range(1, 11)
+    plt.bar(X, nums, facecolor='red', edgecolor='white')
+    for x, y in zip(X, nums):
+        plt.text(x, y, '%d' % y, ha='center', va='bottom')
+    nums = [item['total']['heal'] for item in data][1:11]
+    plt.bar(X, nums, facecolor='green', edgecolor='white')
+    for x, y in zip(X, nums):
+        plt.text(x, y, '%d' % y, ha='center', va='center')
+    plt.xticks(X, labels)
+    patches = [mpatches.Patch(color='red', label='确诊'), \
+            mpatches.Patch(color='green', label='治愈')]
+    plt.legend(handles=patches, ncol=1, loc='best')
+    plt.title('除中国外前10位国家地区疫情数据')
+    name = 'cache/img/world_data_1.png'
+    plt.savefig(name); plt.close()
+    images.append(Image.open(name))
+    os.remove(name)
+
+    return images
+
