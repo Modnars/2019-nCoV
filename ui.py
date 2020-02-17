@@ -9,7 +9,8 @@ Copyrights (c) 2020 Modnar. All rights reserved.
 '''
 
 import os, tkinter
-from tkinter import ttk
+import webbrowser
+from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 
 import numpy as np
@@ -62,8 +63,8 @@ class MainWindow(object):
         self.ph = ImageTk.PhotoImage(im)
         self.canvas.create_image(0, 0, image=self.ph, anchor=tkinter.NW)
 
-        worldButton = ttk.Button(self.countriesFrame, text='国家级',
-                command = self.queryWorld)
+        worldButton = ttk.Button(self.countriesFrame, text='国家级', \
+                command=self.queryWorld)
         worldButton.grid(padx=3, pady=3, row=0, column=0)
         self.buttons = []   # 程序按钮集合(2维数组: 0维度为国家级；1维度为省级)
         buttonList = []
@@ -73,8 +74,8 @@ class MainWindow(object):
             buttonList[i].grid(padx=3, pady=3, row=i//8+1, column=i%8)
         self.buttons.append(buttonList.copy())
 
-        chinaButton = ttk.Button(self.provincesFrame, text='省级',
-                command = self.queryChina)
+        chinaButton = ttk.Button(self.provincesFrame, text='省级', \
+                command=self.queryChina)
         chinaButton.grid(padx=3, pady=3, row=0, column=0)
         buttonList.clear()
         for i in range(len(self.names[1])):
@@ -82,6 +83,12 @@ class MainWindow(object):
                     command=self.maker(i, 1)))
             buttonList[i].grid(padx=3, pady=3, row=i//8+1, column=i%8)
         self.buttons.append(buttonList.copy())
+
+        ttk.Button(self.operationFrame, text='刷新', command=self.refresh) \
+                .grid(padx=3, pady=3, row=0, column=0)
+        ttk.Button(self.operationFrame, text='在浏览器打开原始网页', \
+                command=self.open_in_browser) \
+                .grid(padx=3, pady=3, row=0, column=1)
 
 
     '''
@@ -111,6 +118,7 @@ class MainWindow(object):
         root = tkinter.Toplevel()
         name = self.names[0][argv]
         root.title('%s' % name)
+        root.resizable(False, False)
         labelFrame = ttk.Frame(root)
         chartFrame = ttk.Frame(root)
         labelFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
@@ -148,6 +156,7 @@ class MainWindow(object):
         root = tkinter.Toplevel()
         name = self.names[1][argv]
         root.title('%s' % name)
+        root.resizable(False, False)
         labelFrame = ttk.Frame(root)
         chartFrame = ttk.Frame(root)
         labelFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
@@ -173,6 +182,7 @@ class MainWindow(object):
     def queryWorld(self):
         root = tkinter.Toplevel()
         root.title('世界疫情数据')
+        root.resizable(False, False)
         labelFrame = ttk.Frame(root)
         chartFrame = ttk.Frame(root)
         labelFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
@@ -207,8 +217,61 @@ class MainWindow(object):
 
 
     def queryChina(self):
-        pass
+        root = tkinter.Toplevel()
+        root.title('中国疫情数据')
+        root.resizable(False, False)
+        labelFrame = ttk.Frame(root)
+        chartFrame = ttk.Frame(root)
+        labelFrame.grid(padx=5, pady=5, row=0, column=0, sticky='nwe')
+        chartFrame.grid(padx=5, pady=5, row=1, column=0, sticky='nwe')
 
+        data = datasource.china_data()
+        ttk.Label(labelFrame, text="数据(中国)最近更新时间: %s" % \
+                data['lastUpdateTime'], width=52, foreground='green') \
+                .grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
+        d = data['total']
+        ttk.Label(labelFrame, text='累计确诊: %d例'%d['confirm'], \
+                font='Helvetica -18', foreground='purple') \
+                .grid(padx=5, pady=2, row=1, column=0, sticky='nwes')
+        ttk.Label(labelFrame, text='现有确诊: %d例'%d['nowConfirm'], \
+                font='Helvetica -18', foreground='red') \
+                .grid(padx=5, pady=2, row=2, column=0, sticky='nwes')
+        ttk.Label(labelFrame, text='累计治愈: %d例'%d['heal'], \
+                font='Helvetica -18', foreground='green') \
+                .grid(padx=5, pady=2, row=3, column=0, sticky='nwes')
+        ttk.Label(labelFrame, text='现有疑似: %d例'%d['suspect'], \
+                font='Helvetica -18', foreground='orange') \
+                .grid(padx=5, pady=2, row=4, column=0, sticky='nwes')
+        ttk.Label(labelFrame, text='累计死亡: %d例'%d['dead'], \
+                font='Helvetica -18', foreground='grey') \
+                .grid(padx=5, pady=2, row=5, column=0, sticky='nwes')
+        ttk.Label(labelFrame, text='现有重症: %d例'%d['nowSevere'], \
+                font='Helvetica -18', foreground='magenta') \
+                .grid(padx=5, pady=2, row=6, column=0, sticky='nwes')
+
+        create_table(labelFrame, data['children']).grid(padx=5, pady=10, row=0, \
+                column=1, rowspan=7, sticky='e')
+
+        canvas = tkinter.Canvas(chartFrame, bg='lightblue', width=900, height=350)
+        canvas.grid(padx=5, pady=5, row=0, column=0, sticky='nwes')
+        images = draw2(data)
+        im0 = images[0]
+        ph0 = ImageTk.PhotoImage(im0.resize((480, 360), Image.ANTIALIAS))
+        canvas.create_image(0, 0, image=ph0, anchor=tkinter.NW)
+        im1 = images[1]
+        ph1 = ImageTk.PhotoImage(im1.resize((480, 360), Image.ANTIALIAS))
+        canvas.create_image(440, 0, image=ph1, anchor=tkinter.NW)
+
+        root.mainloop()
+
+    
+    def refresh(self):
+        datasource.refresh()
+        messagebox.showinfo(title='REFRESH', message='数据刷新成功!')
+
+
+    def open_in_browser(self):
+        webbrowser.open('https://news.qq.com/zt2020/page/feiyan.htm?from=singlemessage')
 
 '''
 创造数据显示标签集合:
@@ -303,11 +366,11 @@ def draw(data, name):
     for x, y in zip(X2, Y2):
         plt.text(x, y, '以往: %d' % y, ha='center', va='top')
 
-    file_name = 'cache/img/%s.png' % name
-    plt.savefig(file_name)
+    img_name = 'cache/img/%s.png' % name
+    plt.savefig(img_name)
     plt.close()
-    image = Image.open(file_name)
-    os.remove(file_name)
+    image = Image.open(img_name)
+    os.remove(img_name)
     return image
 
 
@@ -325,11 +388,11 @@ def draw1(data):
     nums = [data[0]['total']['confirm'], others_total]
     plt.pie(nums, labels=labels, autopct='%.2f%%', shadow=True)
     plt.title('世界疫情数据')
-    name = 'cache/img/world_data.png'
-    plt.savefig(name); plt.close()
-    images.append(Image.open(name))
+    img_name = 'cache/img/world_data.png'
+    plt.savefig(img_name); plt.close()
+    images.append(Image.open(img_name))
     # image = Image.open('cache/img/world_data.png')
-    os.remove(name)
+    os.remove(img_name)
 
     labels = [item['name'] for item in data][1:11]
     nums = [item['total']['confirm'] for item in data][1:11]
@@ -346,10 +409,69 @@ def draw1(data):
             mpatches.Patch(color='green', label='治愈')]
     plt.legend(handles=patches, ncol=1, loc='best')
     plt.title('除中国外前10位国家地区疫情数据')
-    name = 'cache/img/world_data_1.png'
-    plt.savefig(name); plt.close()
-    images.append(Image.open(name))
-    os.remove(name)
+    img_name = 'cache/img/world_data_1.png'
+    plt.savefig(img_name); plt.close()
+    images.append(Image.open(img_name))
+    os.remove(img_name)
 
     return images
 
+
+def draw2(data):
+    images = []
+
+    X = [i for i in range(1, len(data['dayList'])+1)] 
+    dates = []; confirms = []; suspects = []; deads = []; heals = []
+    d = data['dayList']
+    for day in d:
+        dates.append(day['date'])
+        confirms.append(day['confirm'])
+        suspects.append(day['suspect'])
+        deads.append(day['dead'])
+        heals.append(day['heal'])
+    plt.plot(X, confirms, color='red')
+    plt.plot(X, suspects, color='orange')
+    plt.plot(X, deads, color='grey')
+    plt.plot(X, heals, color='green')
+    for x, y in zip(X[::2], confirms[::2]):
+        plt.text(x, y, '%d' % y, ha='center', va='center')
+    plt.xticks(X[::2], dates[::2], rotation=45)
+    patches = [mpatches.Patch(color='red', label='确诊'), \
+            mpatches.Patch(color='orange', label='疑似'), \
+            mpatches.Patch(color='grey', label='死亡'), \
+            mpatches.Patch(color='green', label='治愈')]
+    plt.legend(handles=patches, ncol=1, loc='best')
+    plt.title('中国疫情数据走势')
+    img_name = 'cache/img/china_data.png'
+    plt.savefig(img_name); plt.close()
+    images.append(Image.open(img_name))
+    os.remove(img_name)
+
+    X = [i for i in range(1, len(data['dayAddList'])+1)] 
+    dates = []; confirms = []; suspects = []; deads = []; heals = []
+    d = data['dayAddList']
+    for day in d:
+        dates.append(day['date'])
+        confirms.append(day['confirm'])
+        suspects.append(day['suspect'])
+        deads.append(day['dead'])
+        heals.append(day['heal'])
+    plt.plot(X, confirms, color='red')
+    plt.plot(X, suspects, color='orange')
+    plt.plot(X, deads, color='grey')
+    plt.plot(X, heals, color='green')
+    for x, y in zip(X[::2], confirms[::2]):
+        plt.text(x, y, '%d' % y, ha='center', va='center')
+    plt.xticks(X[::2], dates[::2], rotation=45)
+    patches = [mpatches.Patch(color='red', label='确诊增长数'), \
+            mpatches.Patch(color='orange', label='疑似增长数'), \
+            mpatches.Patch(color='grey', label='死亡增长数'), \
+            mpatches.Patch(color='green', label='治愈增长数')]
+    plt.legend(handles=patches, ncol=1, loc='best')
+    plt.title('中国疫情增长走势')
+    img_name = 'cache/img/china_data.png'
+    plt.savefig(img_name); plt.close()
+    images.append(Image.open(img_name))
+    os.remove(img_name)
+
+    return images

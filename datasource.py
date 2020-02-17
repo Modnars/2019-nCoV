@@ -41,6 +41,16 @@ def world_data():
     return (data['lastUpdateTime'], dics)
 
 
+def china_data():
+    dic = dict()
+    dic['lastUpdateTime'] = data['lastUpdateTime']
+    dic['total'] = data['chinaTotal']
+    dic['dayList'] = data['chinaDayList']
+    dic['dayAddList'] = data['chinaDayAddList']
+    dic['children'] = data['areaTree'][0]['children']
+    return dic
+
+
 def countries(idx):
     dic = dict()
     dic['name'] = data['areaTree'][idx]['name']
